@@ -87,27 +87,39 @@ function GlCanvas() {
     //
     // create buffer
     //
-    var triangleVertices = [ // x, y points in counter-clockwise order
-      0.0, 0.5,
-      -0.5, -0.5,
-      0.5, -0.5
+    let triangleVertices = [
+      // x, y points in counter-clockwise order, R, G, B
+      0.0, 0.5,    1.0, 1.0, 0.0,
+      -0.5, -0.5,  0.7, 0.0, 1.0,
+      0.5, -0.5,   0.1, 1.0, 0.6
     ];
 
-    var triangleVertexBufferObj = gl.createBuffer();
+    let triangleVertexBufferObj = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBufferObj);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
 
-    var positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
+    let positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
+    let colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
+
     gl.vertexAttribPointer(
       positionAttribLocation,
       2, // number of elements per attribute
       gl.FLOAT,
       gl.FALSE, // whether data is normalized
-      2 * Float32Array.BYTES_PER_ELEMENT, // size of an individual vertex
+      5 * Float32Array.BYTES_PER_ELEMENT, // size of an individual vertex
       0 // offset from the beginning of a single vertex to this attribute
+    );
+    gl.vertexAttribPointer(
+      colorAttribLocation,
+      3, // number of elements per attribute
+      gl.FLOAT,
+      gl.FALSE, // whether data is normalized
+      5 * Float32Array.BYTES_PER_ELEMENT, // size of an individual vertex
+      2 * Float32Array.BYTES_PER_ELEMENT // offset from the beginning of a single vertex to this attribute
     );
 
     gl.enableVertexAttribArray(positionAttribLocation);
+    gl.enableVertexAttribArray(colorAttribLocation);
 
     //
     // Main render loop
