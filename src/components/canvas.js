@@ -1,21 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { mat4 } from 'gl-matrix';
 
-var vertexShaderText =
+let vertexShaderText =
 [
 'precision mediump float;',
 '',
-'attribute vec2 vertPosition;',
+'attribute vec3 vertPosition;',
 'attribute vec3 vertColor;',
 'varying vec3 fragColor;',
+'uniform mat4 mWorld;',
+'uniform mat4 mView;',
+'uniform mat4 mProj;',
 '',
 'void main()',
 '{',
 '  fragColor = vertColor;',
-'  gl_Position = vec4(vertPosition, 0.0, 1.0);',
+'  gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);',
 '}'
 ].join('\n');
 
-var fragmentShaderText =
+let fragmentShaderText =
 [
 'precision mediump float;',
 '',
@@ -88,10 +92,10 @@ function GlCanvas() {
     // create buffer
     //
     let triangleVertices = [
-      // x, y points in counter-clockwise order, R, G, B
-      0.0, 0.5,    1.0, 1.0, 0.0,
-      -0.5, -0.5,  0.7, 0.0, 1.0,
-      0.5, -0.5,   0.1, 1.0, 0.6
+      // x, y, z points in counter-clockwise order, R, G, B
+       0.0,  0.5, 0.0,  1.0, 1.0, 0.0,
+      -0.5, -0.5, 0.0,  0.7, 0.0, 1.0,
+       0.5, -0.5, 0.0,  0.1, 1.0, 0.6
     ];
 
     let triangleVertexBufferObj = gl.createBuffer();
@@ -103,10 +107,10 @@ function GlCanvas() {
 
     gl.vertexAttribPointer(
       positionAttribLocation,
-      2, // number of elements per attribute
+      3, // number of elements per attribute
       gl.FLOAT,
       gl.FALSE, // whether data is normalized
-      5 * Float32Array.BYTES_PER_ELEMENT, // size of an individual vertex
+      6 * Float32Array.BYTES_PER_ELEMENT, // size of an individual vertex
       0 // offset from the beginning of a single vertex to this attribute
     );
     gl.vertexAttribPointer(
@@ -114,17 +118,34 @@ function GlCanvas() {
       3, // number of elements per attribute
       gl.FLOAT,
       gl.FALSE, // whether data is normalized
-      5 * Float32Array.BYTES_PER_ELEMENT, // size of an individual vertex
-      2 * Float32Array.BYTES_PER_ELEMENT // offset from the beginning of a single vertex to this attribute
+      6 * Float32Array.BYTES_PER_ELEMENT, // size of an individual vertex
+      3 * Float32Array.BYTES_PER_ELEMENT // offset from the beginning of a single vertex to this attribute
     );
 
     gl.enableVertexAttribArray(positionAttribLocation);
     gl.enableVertexAttribArray(colorAttribLocation);
 
+    // Tell OpenGL state machine which program should be active
+    gl.useProgram(program);
+
+    let matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld');
+    let matViewUniformLocation = gl.getUniformLocation(program, 'mView');
+    let matProjUniformLocation = gl.getUniformLocation(program, 'mProj');
+
+    let worldMatrix = new Float32Array(16);
+    let viewMatrix = new Float32Array(16);
+    let projMatrix = new Float32Array(16);
+    mat4.identity(worldMatrix);
+    mat4.identity(viewMatrix);
+    mat4.identity(projMatrix);
+
+    gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+    gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
+    gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
+
     //
     // Main render loop
     //
-    gl.useProgram(program);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   })
 
