@@ -29,8 +29,20 @@ let fragmentShaderText =
 '}'
 ].join('\n');
 
-let initCanvas = (canvas) => {
+let glState = {
+  angle: {x: 0, y: 0},
+  mouse: {lastX: 0, lastY: 0, dragging: false},
+}
+
+let canvas = null;
+
+let initCanvas = (thisCanvas) => {
+  canvas = thisCanvas
   let gl = canvas.getContext('webgl');
+
+  canvas.onmousedown = mouseDown;
+  canvas.onmouseup = mouseUp;
+  canvas.onmousemove = mouseMove;
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -208,9 +220,10 @@ let initCanvas = (canvas) => {
   let angle = 0;
 
   let loop = function () {
-    angle = performance.now() / 1000 / 6 * 2 * Math.PI; // delta time
-    mat4.rotate(xRotationMatrix, identityMatrix, angle, [0, 1, 0]);
-    mat4.rotate(yRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
+    // angle = performance.now() / 1000 / 6 * 2 * Math.PI; // delta time
+    // angle = 0 / 1000 / 6 * 2 * Math.PI; // delta time
+    mat4.rotate(xRotationMatrix, identityMatrix, glState.angle.x, [0, 1, 0]);
+    mat4.rotate(yRotationMatrix, identityMatrix, glState.angle.y, [1, 0, 0]);
     mat4.mul(worldMatrix, xRotationMatrix, yRotationMatrix);
     gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 
@@ -221,6 +234,38 @@ let initCanvas = (canvas) => {
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
+}
+
+function mouseDown(event) {
+  let x = event.clientX;
+  let y = event.clientY;
+  let rect = event.target.getBoundingClientRect();
+
+  // check if mouse in canvas bounds
+  if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
+    glState.mouse.lastX = x;
+    glState.mouse.lastY = y;
+    glState.mouse.dragging = true;
+  }
+}
+
+function mouseUp(event) {
+  glState.mouse.dragging = false;
+}
+
+function mouseMove(event) {
+  let x = event.clientX;
+  let y = event.clientY;
+  if (glState.mouse.dragging) {
+    let factor = 4 / canvas.height;
+    let dx = factor * (x - glState.mouse.lastX);
+    let dy = factor * (y - glState.mouse.lastY);
+
+    glState.angle.x += dx;
+    glState.angle.y += -dy;
+  }
+  glState.mouse.lastX = x;
+  glState.mouse.lastY = y;
 }
 
 export {initCanvas}
