@@ -214,12 +214,18 @@ function GlCanvas() {
     //
     // Main render loop
     //
+    let xRotationMatrix = new Float32Array(16);
+    let yRotationMatrix = new Float32Array(16);
     let identityMatrix = new Float32Array(16);
+
     mat4.identity(identityMatrix);
     let angle = 0;
+
     let loop = function () {
       angle = performance.now() / 1000 / 6 * 2 * Math.PI; // delta time
-      mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
+      mat4.rotate(xRotationMatrix, identityMatrix, angle, [0, 1, 0]);
+      mat4.rotate(yRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
+      mat4.mul(worldMatrix, xRotationMatrix, yRotationMatrix);
       gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 
       gl.clearColor(0.75, 0.85, 0.8, 1.0);
