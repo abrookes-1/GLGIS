@@ -245,4 +245,36 @@ function GlCanvas() {
   );
 }
 
+function mouseDown(event) {
+  let x = event.clientX;
+  let y = event.clientY;
+  let rect = event.target.getBoundingClientRect();
+
+  // check if mouse in canvas bounds
+  if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
+    state.mouse.lastX = x;
+    state.mouse.lastY = y;
+    state.dragging = true;
+  }
+}
+
+function mouseUp(event) {
+  state.dragging = false;
+}
+
+function mouseMove(event) {
+  let x = event.clientX;
+  let y = event.clientY;
+  if (state.dragging) {
+    let factor = 10 / state.canvas.height;
+    let dx = factor * (x - state.mouse.lastX);
+    let dy = factor * (y - state.mouse.lastY);
+
+    state.angle.x += dy;
+    state.angle.y += dx;
+  }
+  state.mouse.lastX = x;
+  state.mouse.lastY = y;
+}
+
 export { GlCanvas }
