@@ -164,17 +164,18 @@ let initCanvas = (thisCanvas) => {
   let mapBoxIndices = [];
   // let mapColor = [0.0, 1.0, 1.0];
   const mapWidth = 110; // map images are 110 x 110
-  const zScale = 0.07;
+  const yScale = 0.07;
   const xOffset = -55;
-  const yOffset = -55;
-  const startingViewOffset = 100; // starting camera distance from origin
-  const maxAltitude = 300; // guess max altitude for color
+  const zOffset = -55;
+  const startingView = [0, 20, -100]; // starting camera position
+  const maxAltitude = 200; // guess max altitude for color
 
   volcano.forEach((altitude, i) => {
     let x = i % mapWidth;
-    let y = Math.floor(i / mapWidth);
+    let z = Math.floor(i / mapWidth);
+    let altPercent = altitude / maxAltitude;
     // x, y, z, r, g, b
-    mapVertices.push(x + xOffset, y + yOffset, altitude * zScale, 0.0, altitude/maxAltitude, 1.0);
+    mapVertices.push(x + xOffset, altitude * yScale, z + zOffset, 1.0 - altPercent, 0.0, altPercent);
   });
 
   console.log(mapVertices);
@@ -240,7 +241,7 @@ let initCanvas = (thisCanvas) => {
   let viewMatrix = new Float32Array(16);
   let projMatrix = new Float32Array(16);
   mat4.identity(worldMatrix);
-  mat4.lookAt(viewMatrix, [0, 0, -startingViewOffset], [0, 0, 0], [0, 1, 0]) // pos of viewer, point looking at, up vec
+  mat4.lookAt(viewMatrix, startingView, [0, 0, 0], [0, 1, 0]) // pos of viewer, point looking at, up vec
   mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0) // vert FOV, aspect ratio, near plane, far plane
 
   gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
@@ -255,7 +256,6 @@ let initCanvas = (thisCanvas) => {
   let identityMatrix = new Float32Array(16);
 
   mat4.identity(identityMatrix);
-  let angle = 0;
 
   let loop = function () {
     // angle = performance.now() / 1000 / 6 * 2 * Math.PI; // delta time
