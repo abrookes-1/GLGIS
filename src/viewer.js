@@ -1,5 +1,5 @@
 import {glMatrix, mat4} from "gl-matrix";
-import {volcano} from "./sampleData";
+import {volcano, getVolcanoTile} from "./sampleData";
 
 let vertexShaderText =
 [
@@ -170,7 +170,7 @@ let initCanvas = (thisCanvas) => {
   const startingView = [0, 20, -100]; // starting camera position
   const maxAltitude = 200; // guess max altitude for color
 
-  volcano.forEach((altitude, i) => {
+  getVolcanoTile(0).forEach((altitude, i) => {
     let x = i % mapWidth;
     let z = Math.floor(i / mapWidth);
     let altPercent = altitude / maxAltitude;
