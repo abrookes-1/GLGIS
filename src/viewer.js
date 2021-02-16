@@ -1,4 +1,5 @@
 import {glMatrix, mat4} from "gl-matrix";
+import {volcano} from "./sampleData";
 
 let vertexShaderText =
 [
@@ -51,7 +52,7 @@ let initCanvas = (thisCanvas) => {
   gl.clearColor(0.75, 0.85, 0.8, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.CULL_FACE);
+  // gl.enable(gl.CULL_FACE);
   gl.cullFace(gl.BACK);
   gl.frontFace(gl.CCW);
 
@@ -159,14 +160,51 @@ let initCanvas = (thisCanvas) => {
     22, 20, 23
   ];
 
+  let mapVertices = [];
+  let mapBoxIndices = [];
+  // let mapColor = [0.0, 1.0, 1.0];
+  const mapWidth = 110; // map images are 110 x 110
+  const zScale = 0.07;
+  const xOffset = -55;
+  const yOffset = -55;
+  const startingViewOffset = 100; // starting camera distance from origin
+  const maxAltitude = 300; // guess max altitude for color
+
+  volcano.forEach((altitude, i) => {
+    let x = i % mapWidth;
+    let y = Math.floor(i / mapWidth);
+    // x, y, z, r, g, b
+    mapVertices.push(x + xOffset, y + yOffset, altitude * zScale, 0.0, altitude/maxAltitude, 1.0);
+  });
+
+  console.log(mapVertices);
+
+  // first square is:
+  //    .0   -- .1
+  //    |    \   |
+  //    .110 -- .111
+  // TODO: make CCW
+  let numSquaresWide = mapWidth - 1;
+  for (let row=0; row<numSquaresWide; row++){
+    for (let col=0; col<numSquaresWide; col++){
+      let p1 = row * mapWidth + col;
+      let p2 = row * mapWidth + col + 1;
+      let p3 = (row+1) * mapWidth + col;
+      let p4 = (row+1) * mapWidth + col + 1;
+      mapBoxIndices.push(p1, p3, p4); // bottom left triangle
+      mapBoxIndices.push(p1, p2, p4); // top right triangle
+    }
+  }
+  console.log(mapBoxIndices);
+
   let boxVertexBufferObject = gl.createBuffer();
 
   gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mapVertices), gl.STATIC_DRAW);
 
   let boxIndexBufferObject = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(boxIndices), gl.STATIC_DRAW);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(mapBoxIndices), gl.STATIC_DRAW);
 
   let positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
   let colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
@@ -202,7 +240,7 @@ let initCanvas = (thisCanvas) => {
   let viewMatrix = new Float32Array(16);
   let projMatrix = new Float32Array(16);
   mat4.identity(worldMatrix);
-  mat4.lookAt(viewMatrix, [0, 0, -8], [0, 0, 0], [0, 1, 0]) // pos of viewer, point looking at, up vec
+  mat4.lookAt(viewMatrix, [0, 0, -startingViewOffset], [0, 0, 0], [0, 1, 0]) // pos of viewer, point looking at, up vec
   mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0) // vert FOV, aspect ratio, near plane, far plane
 
   gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
@@ -229,7 +267,7 @@ let initCanvas = (thisCanvas) => {
 
     gl.clearColor(0.75, 0.85, 0.8, 1.0);
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-    gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, mapBoxIndices.length, gl.UNSIGNED_SHORT, 0);
 
     requestAnimationFrame(loop);
   };
