@@ -26,4 +26,5 @@ yarn-error.log*
 # jetbrains
 .idea
 
-src/test_images.csv
+# big files make github mad
+data/
